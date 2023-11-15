@@ -83,7 +83,93 @@ min(replacement_cost)
 FROM film;
 
 --Q2 
+SELECT 
+COUNT(film_id),
+CASE 
+  WHEN replacement_cost BETWEEN 9.99 AND 19.99 THEN 1
+  WHEN replacement_cost BETWEEN 20.00 AND 24.99 THEN 2
+  WHEN replacement_cost BETWEEN 25.00 AND 29.99 THEN 3
+  ELSE 0 
+END AS chi_phi 
+FROM film
+GROUP BY chi_phi 
 
+--Q3 
+SELECT
+a.title,
+a.length,
+c.name 
+FROM film AS a 
+JOIN film_category AS b 
+ON a.film_id = b.film_id
+JOIN category AS c 
+ON b.category_id=c.category_id
+WHERE c.name IN ('Drama','Sports')
+ORDER BY a.length DESC
+
+--Q4
+SELECT
+c.name, 
+COUNT(a.title) AS so_luong_phim
+FROM film AS a 
+JOIN film_category AS b 
+ON a.film_id = b.film_id
+JOIN category AS c 
+ON b.category_id=c.category_id
+GROUP BY c.name
+ORDER BY so_luong_phim DESC
+
+--Q5 
+SELECT
+c.first_name || ' '|| c.last_name AS HO_VA_TEN,
+COUNT(a.title) AS so_luong_phim_tham_gia
+FROM film AS a 
+JOIN film_actor AS b 
+ON a.film_id = b.film_id
+JOIN actor AS c 
+ON b.actor_id=c.actor_id
+GROUP BY HO_VA_TEN
+ORDER BY so_luong_phim_tham_gia DESC
+
+--Q6 KHÔNG HIỂU ĐỀ 
+SELECT 
+a.address_id
+FROM customer AS a 
+LEFT JOIN address AS b 
+ON a.address_id=b.address_id
+WHERE b.address IS NULL
+
+--Q7 
+SELECT 
+d.city,
+SUM(a.amount) AS doanh_thu
+FROM payment AS a
+JOIN customer AS b 
+ON a.customer_id = b.customer_id
+JOIN address AS c 
+ON b.address_id = c.address_id
+JOIN city AS d 
+ON c.city_id = d.city_id
+GROUP BY d.city 
+ORDER BY doanh_thu DESC
+
+--Q8 : KHÔNG HIỂU ĐỀ 
+SELECT 
+d.city || ',' || e.country AS noi_chon,
+SUM(a.amount) AS doanh_thu
+FROM payment AS a
+JOIN customer AS b 
+ON a.customer_id = b.customer_id
+JOIN address AS c 
+ON b.address_id = c.address_id
+JOIN city AS d 
+ON c.city_id = d.city_id
+JOIN country AS e 
+ON d.country_id = e.country_id
+GROUP BY noi_chon
+ORDER BY doanh_thu DESC
+
+ 
 
 
 
