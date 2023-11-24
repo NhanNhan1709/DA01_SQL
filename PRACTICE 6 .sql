@@ -13,6 +13,22 @@ COUNT(DISTINCT company_id) AS duplicate_companies
 FROM job_count
 WHERE job_count > 1;
 
+--Ex2 
+SELECT *
+FROM 
+(SELECT
+category,
+product,
+SUM(spend)  AS total_spend,
+RANK() OVER( PARTITION BY category ORDER BY SUM(spend) DESC ) AS RANKING
+FROM product_spend
+WHERE EXTRACT( 'year' FROM transaction_date) = 2022
+GROUP BY category, product) AS ss
+WHERE ranking <= 2
+
+--Ex3 Không chạy ra bảng dữ liệu 
+
+
 --Ex4 
 SELECT 
 a.page_id
@@ -60,4 +76,34 @@ SELECT
 employee_id 
 FROM employees 
 WHERE salary < 30000 AND manager_id NOT IN (SELECT employee_id FROM Employees)
+
+--Ex10 Trùng bài 1 
+
+--Ex11 
+(SELECT name
+FROM users AS a
+JOIN MovieRating AS b
+ON a.user_id = b.user_id
+WHERE RATING = 5 )
+
+UNION
+
+(SELECT title
+FROM Movies AS a
+JOIN MovieRating AS b
+ON a.movie_id = b.movie_id
+WHERE RATING = 5 )
+
+--Ex12 
+SELECT id, 
+COUNT(*) as number_friends
+FROM (
+    SELECT requester_id AS id FROM RequestAccepted
+    UNION ALL
+    SELECT accepter_id FROM RequestAccepted ) as total
+ GROUP BY id 
+ORDER BY number_friends DESC 
+LIMIT 1;
+
+
 
