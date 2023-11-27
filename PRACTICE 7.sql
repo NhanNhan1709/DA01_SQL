@@ -15,10 +15,25 @@ ROUND(100*(curr_year_spend -prev_year_spend)/prev_year_spend,2) AS year_growth_r
 FROM year_spend; 
 
 --Ex2 
+-- CACH 1 : 
 SELECT DISTINCT card_name, 
 FIRST VALUE (issued_amount) OVER(PARTITION BY card_name ORDER BY CONCAT(issue_year,issue_month,'01')) as amount
 FROM monthly_cards_issued
 ORDER BY amount DESC;
+
+-- CACH 2 : 
+WITH cte AS (
+SELECT issue_month,
+card_name, 
+first_value (issued_amount) OVER(PARTITION BY card_name ORDER BY issue_year, issue_month) AS issued_amount
+FROM monthly_cards_issued ) 
+
+SELECT card_name,
+issued_amount
+FROM cte 
+GROUP BY card_name, issued_amount 
+ORDER BY issued_amount  DESC
+  
 
 --Ex3 
 WITH trans_num AS (
@@ -50,21 +65,42 @@ purchase_count
 FROM transaction_new 
 WHERE ranking = 1 
 
---Ex5 Cách tính rolling average tweet count by 3-day period 
+--Ex5 
+WITH cte1 AS (
+SELECT user_id,
+tweet_date,
+tweet_count AS cur_tweet,
+LAG(tweet_count) OVER(PARTITION BY user_id ORDER BY tweet_date) AS before_date 
+FROM tweets)
+,
+cte2 AS (
+SELECT user_id,
+tweet_date,
+cur_tweet,
+before_date,
+LAG(before_date) OVER (PARTITION BY user_id ORDER BY tweet_date),
+COALESCE(cur_tweet,0) + COALESCE(before_date,0) + COALESCE(LAG(before_date) OVER (PARTITION BY user_id ORDER BY tweet_date),0) AS sum,
+row_number () OVER(PARTITION BY user_id ORDER BY tweet_date) AS rank 
+FROM cte1) 
+  
 
 
 --Ex6 
- WITH A AS (
-SELECT 
-  *,
-  LAG(transaction_timestamp) OVER (PARTITION BY merchant_id, credit_card_id, amount ORDER BY transaction_timestamp)
-  AS previous_transaction,
-  RIGHT(transaction_timestamp - LAG(transaction_timestamp) OVER (PARTITION BY merchant_id, credit_card_id, amount ORDER BY transaction_timestamp),1) AS time_difference
-FROM transactions;) 
+WITH cte AS (
+SELECT merchant_id,
+credit_card_id,
+amount, 
+transaction_timestamp,
+EXTRACT (hour FROM transaction_timestamp - LAG(transaction_timestamp) OVER 
+                    (PARTITION BY merchant_id, credit_card_id, amount))*60 + EXTRACT (minute FROM transaction_timestamp - LAG(transaction_timestamp) OVER 
+                    (PARTITION BY merchant_id, credit_card_id, amount)) AS time
+                    
+FROM transactions)
 
-SELECT COUNT(merchant_id) AS payment_count
-FROM A
-WHERE minute_difference <= 10;
+SELECT 
+COUNT(*) AS payment_count
+FROM cte 
+WHERE time <=10 
 
 --Ex7 
 SELECT *
